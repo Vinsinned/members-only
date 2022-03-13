@@ -1,5 +1,7 @@
 var express = require('express');
 var router = express.Router();
+var passport = require('passport');
+var LocalStrategy = require('passport-local');
 const { body, validationResult, check } = require('express-validator');
 var bcrypt = require('bcryptjs');
 
@@ -12,9 +14,48 @@ mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
+passport.use(
+  new LocalStrategy((username, password, done) => {
+    User.findOne({ username: username }, (err, user) => {
+      if (err) { 
+        return done(err);
+      }
+      if (!user) {
+        return done(null, false, { message: "Incorrect username" });
+      }
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          // passwords match! log user in
+          console.log('YESSIR YOUN DID THAT')
+          return done(null, user)
+        } else {
+          // passwords do not match!
+          console.log('SHUT UP YA FUCKIN FATTY')
+          return done(null, false, { message: "Incorrect password" })
+        }
+        //I removed the final return in order to stop an error,
+      })
+    });
+  })
+);
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
+
+router.get('/', function(req, res, next) {
+  return res.render('index', { title: 'Welcome!', user: req.user });
+});
+
 /* GET users listing. */
 router.get('/sign-up', function(req, res, next) {
-  res.render('sign_up', { title: 'Sign Up' });
+  return res.render('sign_up', { title: 'Sign Up' });
 });
 
 router.post("/sign-up", [
@@ -60,7 +101,7 @@ router.post("/sign-up", [
           if (err) { return next(err); }
           // Successful - redirect to new author record.
           //res.redirect(user.url);
-          res.redirect('/');
+          return res.redirect('/');
         });
       }
     });
@@ -68,8 +109,27 @@ router.post("/sign-up", [
   }
 ]);
 
+router.get('/log-in', function (req, res, next) {
+  return res.render('log_in', { title: 'Log In' });
+});
+
+router.post(
+  "/log-in",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/"
+  })
+);
+
+
+//fix this
+router.get("/log-out", (req, res) => {
+  req.logout();
+  return res.redirect("/");  
+});
+
 router.get('/:id', function (req, res, next) {
-  res.redirect('/');
+  return res.redirect('/');
 });
 
 module.exports = router;
