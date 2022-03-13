@@ -4,9 +4,9 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local');
 const { body, validationResult, check } = require('express-validator');
 var bcrypt = require('bcryptjs');
-
 var User = require('../models/user');
 
+//connect to mongoDB
 var mongoose = require('mongoose');
 var mongoDB = 'mongodb+srv://vinson:a@cluster0.if6je.mongodb.net/MembersOnly?retryWrites=true&w=majority';
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true});
@@ -14,6 +14,7 @@ mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
+//initialize passportjs
 passport.use(
   new LocalStrategy((username, password, done) => {
     User.findOne({ username: username }, (err, user) => {
@@ -49,16 +50,17 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
+
+//paths
 router.get('/', function(req, res, next) {
   return res.render('index', { title: 'Welcome!', user: req.user });
 });
 
-/* GET users listing. */
 router.get('/sign-up', function(req, res, next) {
   return res.render('sign_up', { title: 'Sign Up' });
 });
 
-router.post("/sign-up", [
+router.post('/sign-up', [
   body('firstName').trim().isLength({ min: 1 }).escape().withMessage('First name must be specified.')
     .isAlphanumeric().withMessage('First name has non-alphanumeric characters.'),
   body('lastName').trim().isLength({ min: 1 }).escape().withMessage('Last name must be specified.')
@@ -113,19 +115,68 @@ router.get('/log-in', function (req, res, next) {
   return res.render('log_in', { title: 'Log In' });
 });
 
-router.post(
-  "/log-in",
-  passport.authenticate("local", {
+router.post('/log-in', passport.authenticate("local", {
     successRedirect: "/",
     failureRedirect: "/"
   })
 );
 
-
-//fix this
-router.get("/log-out", (req, res) => {
+router.get('/log-out', (req, res) => {
   req.logout();
-  return res.redirect("/");  
+  return res.redirect('/');  
+});
+
+router.get("/:id/secret-code", (req, res) => {
+  return res.render('secret_code', {title: 'Enter Code'});  
+});
+
+router.post("/:id/secret-code", [
+  body('code').trim().isLength({ min: 1 }).escape().withMessage('Code must be specified.')
+    .isAlphanumeric().withMessage('Code has non-alphanumeric characters.'),
+  
+  (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        // There are errors. Render form again with sanitized values/errors messages.
+        res.render('secret_code', { title: 'Enter Code', secret: req.body.code, errors: errors.array() });
+        return;
+      }
+      else {
+        // Data from form is valid.
+        console.log(req.user)
+        if (req.body.code === 'abc') {
+          //correct code
+          if (req.user.id !== null) {
+            //user exists
+            User.findByIdAndUpdate(req.user.id,{"memberStatus": "Yes"}, function(err, result){
+              if(err){
+                  return res.send(err)
+              }
+              else{
+                  result.save(function (err) {
+                    if (err) { return next(err); }
+                    // Successful - redirect to new author record.
+                    //res.redirect(user.url);
+                    return res.redirect('/users/code-success');
+                  });
+              }
+            })
+          } else {
+            //in edge case if somehow user is not logged in and in sign up page
+            res.redirect('/');
+          }
+        }
+        if (req.body.code !== 'abc') {
+          //wrong code
+          res.render('secret_code', { title: 'Enter Code', secret: req.body.code, errorOne: 'Wrong Code' });
+        }
+      }
+  }
+]);
+
+router.get("/code-success", (req, res) => {
+  return res.render('code_success', {title: 'Successful Code!'});  
 });
 
 router.get('/:id', function (req, res, next) {

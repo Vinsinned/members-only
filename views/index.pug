@@ -5,11 +5,11 @@ block content
     h1 Welcome back #{user.username}
     a(href='/users/log-out') Log Out
   else 
-    form(method='POST' action='/users/login')
-    div.form-group
-      label(for='username') Username:
-      input#username.form-control(type='email', placeholder='Username' name='username' required='true' value=(undefined===user ? '' : user.username) )
-      br
-      label(for='password') Password:
-      input#password.form-control(type='password', placeholder='Password' name='password' required='true' value=(undefined===user ? '' : user.password))
-    button.btn.btn-primary(type='submit') Submit
+    h1 You are not logged in. Please log in
+    h1 
+      a(href='users/log-in') Here
+
+block extraLinks 
+  if user
+    li 
+      a(href='/users/' + user.id + '/secret-Code') Secret Code
