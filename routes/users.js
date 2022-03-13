@@ -4,7 +4,6 @@ const { body, validationResult, check } = require('express-validator');
 var bcrypt = require('bcryptjs');
 
 var User = require('../models/user');
-var async = require('async')
 
 var mongoose = require('mongoose');
 var mongoDB = 'mongodb+srv://vinson:a@cluster0.if6je.mongodb.net/MembersOnly?retryWrites=true&w=majority';
@@ -23,7 +22,7 @@ router.post("/sign-up", [
     .isAlphanumeric().withMessage('First name has non-alphanumeric characters.'),
   body('lastName').trim().isLength({ min: 1 }).escape().withMessage('Last name must be specified.')
     .isAlphanumeric().withMessage('Last name has non-alphanumeric characters.'),
-  check('email').normalizeEmail().isEmail(),
+  check('username').normalizeEmail().isEmail(),
   check('password').exists(),
   check(
     'confirmPassword',
@@ -43,7 +42,7 @@ router.post("/sign-up", [
       const user = new User({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
-        email: req.body.email,
+        username: req.body.username,
         memberStatus: 'No',
         password: hashedPassword
       })
