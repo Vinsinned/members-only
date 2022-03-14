@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h1= title
+
+  ul
+  each message in message_list
+    li 
+      if locals.user
+        if user.memberStatus === true
+          h2= user.name
+        else  
+          h2 Anonymous
+      else 
+        h2 Anonymous
+      h3= message.title
+      p= message.text
+      p= message.date
+
+  else
+    li There are no messages.

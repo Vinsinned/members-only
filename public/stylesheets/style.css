@@ -15,6 +15,7 @@ ul {
 
 li {
   margin-top: 1rem;
+  list-style: none;
 }
 
 .col-sm-2 {

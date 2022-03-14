@@ -86,7 +86,7 @@ router.post('/sign-up', [
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         username: req.body.username,
-        memberStatus: 'No',
+        memberStatus: false,
         password: hashedPassword
       })
 
@@ -141,37 +141,36 @@ router.post("/:id/secret-code", [
         // There are errors. Render form again with sanitized values/errors messages.
         res.render('secret_code', { title: 'Enter Code', secret: req.body.code, errors: errors.array() });
         return;
-      }
-      else {
-        // Data from form is valid.
-        console.log(req.user)
-        if (req.body.code === 'abc') {
-          //correct code
-          if (req.user.id !== null) {
-            //user exists
-            User.findByIdAndUpdate(req.user.id,{"memberStatus": "Yes"}, function(err, result){
-              if(err){
-                  return res.send(err)
-              }
-              else{
-                  result.save(function (err) {
-                    if (err) { return next(err); }
-                    // Successful - redirect to new author record.
-                    //res.redirect(user.url);
-                    return res.redirect('/users/code-success');
-                  });
-              }
-            })
-          } else {
-            //in edge case if somehow user is not logged in and in sign up page
-            res.redirect('/');
-          }
-        }
-        if (req.body.code !== 'abc') {
-          //wrong code
-          res.render('secret_code', { title: 'Enter Code', secret: req.body.code, errorOne: 'Wrong Code' });
+    }
+    else {
+      // Data from form is valid.
+      if (req.body.code === 'abc') {
+        //correct code
+        if (req.user.id !== null) {
+          //user exists
+          User.findByIdAndUpdate(req.user.id,{"memberStatus": true}, function(err, result){
+            if(err){
+              return res.send(err)
+            }
+            else{
+              result.save(function (err) {
+                if (err) { return next(err); }
+                // Successful - redirect to new author record.
+                //res.redirect(user.url);
+                return res.redirect('/users/code-success');
+              });
+            }
+          })
+        } else {
+          //in edge case if somehow user is not logged in and in sign up page
+          res.redirect('/');
         }
       }
+      if (req.body.code !== 'abc') {
+        //wrong code
+        res.render('secret_code', { title: 'Enter Code', secret: req.body.code, errorOne: 'Wrong Code' });
+      }
+    }
   }
 ]);
 

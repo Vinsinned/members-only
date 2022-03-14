@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+const { DateTime } = require("luxon");  //for date handling
 
 var Schema = mongoose.Schema;
 
@@ -14,6 +15,12 @@ MessageSchema
 .virtual('url')
 .get(function () {
   return '/messages/'+this._id;
+});
+
+MessageSchema
+.virtual('date')
+.get(function () {
+  return DateTime.fromJSDate(this.timestamp).toISODate(); //format 'YYYY-MM-DD'
 });
 
 // Export model.
