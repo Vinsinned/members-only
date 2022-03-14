@@ -15,7 +15,10 @@ block content
         h2 Anonymous
       h3= message.title
       p= message.text
-      p= message.date
+      if locals.user
+        if user.memberStatus === true
+          p= message.date
+    hr
 
   else
     li There are no messages.

@@ -40,22 +40,22 @@ router.post('/create', [
     })
 
     if (!errors.isEmpty()) {
-        // There are errors. Render form again with sanitized values/errors messages.
-        res.render('create_message', { title: 'Create Message', message: message, errors: errors.array() });
-        return;
-      }
-      else {
-        // Data from form is valid.
+      // There are errors. Render form again with sanitized values/errors messages.
+      res.render('create_message', { title: 'Create Message', message: message, errors: errors.array() });
+      return;
+    }
+    else {
+      // Data from form is valid.
 
-        // Save author.
-        message.save(function (err) {
-          if (err) { return next(err); }
-          // Successful - redirect to new author record.
-          //res.redirect(user.url);
-          return res.redirect('/');
-        });
-      }
+      // Save author.
+      message.save(function (err) {
+        if (err) { return next(err); }
+        // Successful - redirect to new author record.
+        //res.redirect(user.url);
+        return res.redirect('/');
+      });
+    }
   }
-])
+]);
 
 module.exports = router;
