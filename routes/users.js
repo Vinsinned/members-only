@@ -57,7 +57,11 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/sign-up', function(req, res, next) {
-  return res.render('sign_up', { title: 'Sign Up' });
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    return res.render('sign_up', { title: 'Sign Up' });
+  }
 });
 
 router.post('/sign-up', [
@@ -112,7 +116,11 @@ router.post('/sign-up', [
 ]);
 
 router.get('/log-in', function (req, res, next) {
-  return res.render('log_in', { title: 'Log In' });
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    return res.render('log_in', { title: 'Log In' });
+  }
 });
 
 router.post('/log-in', passport.authenticate("local", {
