@@ -7,7 +7,8 @@ var UserSchema = new Schema({
     lastName: { type: String, required: true, minLength: 1, maxLength: 100 },
     username: { type: String, required: true },
     password: { type: String },
-    memberStatus: {type: Boolean, required: true, default:false},
+    memberStatus: { type: Boolean, required: true, default: false },
+    adminStatus: { type: Boolean, required: true, default: false }
 });
 
 // Virtual for this genre instance URL.

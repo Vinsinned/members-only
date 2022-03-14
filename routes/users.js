@@ -127,7 +127,11 @@ router.get('/log-out', (req, res) => {
 });
 
 router.get("/:id/secret-code", (req, res) => {
-  return res.render('secret_code', {title: 'Enter Code'});  
+  if (req.isAuthenticated()) {
+    return res.render('secret_code', { title: 'Enter Code' }); 
+  } else {
+    res.redirect('/');
+  }
 });
 
 router.post("/:id/secret-code", [
@@ -174,8 +178,64 @@ router.post("/:id/secret-code", [
   }
 ]);
 
+router.get('/:id/admin-code', function (req, res, next) {
+  if (req.isAuthenticated()) {
+    res.render('admin_code', { title: 'Enter Code' });
+  } else {
+    res.redirect('/');
+  }
+});
+
+router.post("/:id/admin-code", [
+  body('code').trim().isLength({ min: 1 }).escape().withMessage('Code must be specified.')
+    .isAlphanumeric().withMessage('Code has non-alphanumeric characters.'),
+  
+  (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        // There are errors. Render form again with sanitized values/errors messages.
+        res.render('admin_code', { title: 'Enter Code', admin: req.body.code, errors: errors.array() });
+        return;
+    }
+    else {
+      // Data from form is valid.
+      if (req.body.code === 'vinson') {
+        //correct code
+        if (req.user.id !== null) {
+          //user exists
+          User.findByIdAndUpdate(req.user.id,{"adminStatus": true}, function(err, result){
+            if(err){
+              return res.send(err)
+            }
+            else{
+              result.save(function (err) {
+                if (err) { return next(err); }
+                // Successful - redirect to new author record.
+                //res.redirect(user.url);
+                return res.redirect('/users/admin-code-success');
+              });
+            }
+          })
+        } else {
+          //in edge case if somehow user is not logged in and in sign up page
+          res.redirect('/');
+        }
+      }
+      if (req.body.code !== 'vinson') {
+        //wrong code
+        res.render('admin_code', { title: 'Enter Code', admin: req.body.code, errorOne: 'Wrong Code' });
+      }
+    }
+  }
+]);
+
 router.get("/code-success", (req, res) => {
   return res.render('code_success', {title: 'Successful Code!'});  
+});
+
+router.get("/admin-code-success", (req, res) => {
+  return res.render('admin_code_success', {title: 'Successful Code!'});  
 });
 
 router.get('/:id', function (req, res, next) {
