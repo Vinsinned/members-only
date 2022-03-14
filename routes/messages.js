@@ -4,6 +4,8 @@ var router = express.Router();
 const { body, validationResult, check } = require('express-validator');
 
 const Message = require('../models/message');
+const message = require('../models/message');
+const User = require('../models/user');
 
 /* GET messages listing. */
 router.get('/', function (req, res, next) {
@@ -26,7 +28,6 @@ router.get('/create', function (req, res, next) {
 
 router.post('/create', [
   body('title').trim().isLength({ min: 1 }).escape().withMessage('Title must be specified.'),
-  body('text').trim().isLength({ min: 1 }).escape().withMessage('Text must be specified.'),
 
   (req, res, next) => {
     const errors = validationResult(req);
@@ -35,8 +36,9 @@ router.post('/create', [
       title: req.body.title,
       text: req.body.text,
       timestamp: new Date().toISOString(),
+      name: req.user.name,
       //convert objectId to string
-      user: req.user.name.str
+      user: req.user.id
     })
 
     if (!errors.isEmpty()) {
@@ -52,10 +54,30 @@ router.post('/create', [
         if (err) { return next(err); }
         // Successful - redirect to new author record.
         //res.redirect(user.url);
-        return res.redirect('/');
+        return res.redirect('/messages');
       });
     }
   }
 ]);
+
+router.get('/:id/delete', function (req, res, next) {
+  if (req.isAuthenticated()) {
+    if (req.user.adminStatus === true) {
+      res.render('delete_message', { title: 'Delete Message' });
+    } else {
+      res.redirect('/messages');
+    }
+  } else {
+    res.redirect('/');
+  }
+})
+
+router.post('/:id/delete', function (req, res, next) {
+  Message.findByIdAndRemove(req.params.id, function deleteMessage(err) {
+    if (err) { return next(err); }
+    // Success - go to author list.
+    res.redirect('/messages')
+  })
+})
 
 module.exports = router;
